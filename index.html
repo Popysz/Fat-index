@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faturamento - Nova Veneza</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <style>
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .employee-color-1 { background-color: #FF6B6B; }
+        .employee-color-2 { background-color: #4ECDC4; }
+        .employee-color-3 { background-color: #45B7D1; }
+        .employee-color-4 { background-color: #FFBE0B; }
+        .employee-color-5 { background-color: #FB5607; }
+        .employee-color-6 { background-color: #8338EC; }
+        .employee-color-7 { background-color: #3A86FF; }
+        .employee-color-8 { background-color: #06D6A0; }
+        .employee-color-9 { background-color: #EF476F; }
+        .employee-color-10 { background-color: #118AB2; }
+        
+        .fc-event {
+            cursor: pointer;
+        }
+        
+        .material-thumbnail {
+            transition: transform 0.3s;
+        }
+        .material-thumbnail:hover {
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 768px) {
+            .tabs-container {
+                flex-direction: column;
+            }
+            .tab-button {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-blue-800">Setor de Faturamento</h1>
+            <h2 class="text-xl text-gray-600">Prefeitura Municipal de Nova Veneza</h2>
+        </header>
+        
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+            <div class="tabs-container flex flex-wrap border-b border-gray-200">
+                <button class="tab-button px-6 py-3 font-medium text-blue-800 bg-blue-50 border-b-2 border-blue-800" data-tab="vacation">
+                    <i class="fas fa-umbrella-beach mr-2"></i> Férias
+                </button>
+                <button class="tab-button px-6 py-3 font-medium text-gray-600 hover:text-blue-800" data-tab="schedule">
+                    <i class="fas fa-calendar-alt mr-2"></i> Escala de Trabalho
+                </button>
+                <button class="tab-button px-6 py-3 font-medium text-gray-600 hover:text-blue-800" data-tab="materials">
+                    <i class="fas fa-folder-open mr-2"></i> Materiais
+                </button>
+            </div>
+            
+            <!-- Vacation Tab -->
+            <div id="vacation" class="tab-content active p-6">
+                <h3 class="text-xl font-semibold mb-4 text-blue-800">Agendamento de Férias</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-medium mb-2 text-blue-800">Selecione o Colaborador</h4>
+                        <select id="employee-select" class="w-full p-2 border border-gray-300 rounded">
+                            <option value="">Selecione...</option>
+                            <option value="1">Aguinaldo Rodrigues Da Silva Junior</option>
+                            <option value="2">Arilson de Lima Sousa</option>
+                            <option value="3">Elivan Gomes da Silva Sousa</option>
+                            <option value="4">Igor de Oliveira Nascimento</option>
+                            <option value="5">Johnatan Francisco Felix do Vale</option>
+                            <option value="6">Luis Vinicius Do Carmo Moreira</option>
+                            <option value="7">Paulo Ricardo Vaz de Souza</option>
+                            <option value="8">Rayane Firmino Da Silva</option>
+                            <option value="9">Rian Rodrigues da Silva</option>
+                            <option value="10">Widson de Oliveira Barbosa</option>
+                        </select>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-medium mb-2 text-blue-800">Período de Férias</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-sm text-gray-600">Data Início</label>
+                                <input type="date" id="vacation-start" class="w-full p-2 border border-gray-300 rounded">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600">Data Fim</label>
+                                <input type="date" id="vacation-end" class="w-full p-2 border border-gray-300 rounded">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-center">
+                        <button id="save-vacation" class="bg-blue-800 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-save mr-2"></i> Salvar Férias
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="vacation-calendar" class="bg-white p-4 rounded-lg border border-gray-200"></div>
+                
+                <div class="mt-6">
+                    <h4 class="font-medium mb-2 text-blue-800">Legenda de Colaboradores</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full employee-color-1 mr-2"></div>
+                            <span class="text-sm">Aguinaldo</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full employee-color-2 mr-2"></div>
+                            <span class="text-sm">Arilson</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full employee-color-3 mr-2"></div>
+                            <span class="text-sm">Elivan</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full employee-color-4 mr-2"></div>
+                            <span class="text-sm">Igor</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full employee-color-5 mr-2"></div>
+                            <span class="text-sm">Johnatan</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full employee-color-6 mr-2"></div>
+                            <span class="text-sm">Luis</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full employee-color-7 mr-2"></div>
+                            <span class="text-sm">Paulo</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full employee-color-8 mr-2"></div>
+                            <span class="text-sm">Rayane</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full employee-color-9 mr-2"></div>
+                            <span class="text-sm">Rian</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 rounded-full employee-color-10 mr-2"></div>
+                            <span class="text-sm">Widson</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Schedule Tab -->
+            <div id="schedule" class="tab-content p-6">
+                <h3 class="text-xl font-semibold mb-4 text-blue-800">Escala de Trabalho</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-medium mb-2 text-blue-800">Cadastrar Nova Escala</h4>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm text-gray-600">Colaborador</label>
+                                <select id="schedule-employee" class="w-full p-2 border border-gray-300 rounded">
+                                    <option value="">Selecione...</option>
+                                    <option value="1">Aguinaldo Rodrigues Da Silva Junior</option>
+                                    <option value="2">Arilson de Lima Sousa</option>
+                                    <option value="3">Elivan Gomes da Silva Sousa</option>
+                                    <option value="4">Igor de Oliveira Nascimento</option>
+                                    <option value="5">Johnatan Francisco Felix do Vale</option>
+                                    <option value="6">Luis Vinicius Do Carmo Moreira</option>
+                                    <option value="7">Paulo Ricardo Vaz de Souza</option>
+                                    <option value="8">Rayane Firmino Da Silva</option>
+                                    <option value="9">Rian Rodrigues da Silva</option>
+                                    <option value="10">Widson de Oliveira Barbosa</option>
+                                </select>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-sm text-gray-600">Horário Entrada</label>
+                                    <input type="time" id="schedule-start" class="w-full p-2 border border-gray-300 rounded">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600">Horário Saída</label>
+                                    <input type="time" id="schedule-end" class="w-full p-2 border border-gray-300 rounded">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm text-gray-600">Tipo de Escala</label>
+                                <select id="schedule-type" class="w-full p-2 border border-gray-300 rounded">
+                                    <option value="12x36">12x36 (12h trabalho, 36h descanso)</option>
+                                    <option value="6x1">6x1 (6 dias trabalho, 1 dia descanso)</option>
+                                    <option value="5x2">5x2 (5 dias trabalho, 2 dias descanso)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-sm text-gray-600">Data Início</label>
+                                    <input type="date" id="schedule-period-start" class="w-full p-2 border border-gray-300 rounded">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600">Data Fim</label>
+                                    <input type="date" id="schedule-period-end" class="w-full p-2 border border-gray-300 rounded">
+                                </div>
+                            </div>
+                            
+                            <button id="save-schedule" class="bg-blue-800 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition w-full">
+                                <i class="fas fa-save mr-2"></i> Salvar Escala
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-medium mb-2 text-blue-800">Escalas Cadastradas</h4>
+                        <div id="schedules-list" class="space-y-2 max-h-96 overflow-y-auto">
+                            <!-- Schedules will be listed here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="schedule-calendar" class="bg-white p-4 rounded-lg border border-gray-200"></div>
+            </div>
+            
+            <!-- Materials Tab -->
+            <div id="materials" class="tab-content p-6">
+                <h3 class="text-xl font-semibold mb-4 text-blue-800">Materiais do Setor</h3>
+                
+                <div class="mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-medium mb-2 text-blue-800">Adicionar Novo Material</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm text-gray-600">Título</label>
+                                <input type="text" id="material-title" class="w-full p-2 border border-gray-300 rounded" placeholder="Título do material">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600">Tipo</label>
+                                <select id="material-type" class="w-full p-2 border border-gray-300 rounded">
+                                    <option value="document">Documento</option>
+                                    <option value="spreadsheet">Planilha</option>
+                                    <option value="video">Vídeo</option>
+                                    <option value="tutorial">Tutorial</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600">URL</label>
+                                <input type="text" id="material-url" class="w-full p-2 border border-gray-300 rounded" placeholder="Link do material">
+                            </div>
+                        </div>
+                        
+                        <button id="add-material" class="mt-4 bg-blue-800 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-plus mr-2"></i> Adicionar Material
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- Materials will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('bg-blue-50', 'border-blue-800', 'text-blue-800');
+                        btn.classList.add('text-gray-600', 'hover:text-blue-800');
+                    });
+                    
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked button and corresponding content
+                    button.classList.remove('text-gray-600', 'hover:text-blue-800');
+                    button.classList.add('bg-blue-50', 'border-blue-800', 'text-blue-800');
+                    
+                    const tabId = button.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // Initialize calendars when their tabs are shown
+                    if (tabId === 'vacation') {
+                        initVacationCalendar();
+                    } else if (tabId === 'schedule') {
+                        initScheduleCalendar();
+                    }
+                });
+            });
+            
+            // Initialize first tab
+            document.querySelector('.tab-button[data-tab="vacation"]').click();
+            
+            // Load materials
+            loadMaterials();
+        });
+        
+        // Vacation Calendar
+        function initVacationCalendar() {
+            const calendarEl = document.getElementById('vacation-calendar');
+            
+            // Load saved vacations from localStorage
+            let savedVacations = JSON.parse(localStorage.getItem('vacations')) || [];
+            
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,dayGridWeek'
+                },
+                events: savedVacations.map(vacation => ({
+                    title: vacation.employeeName,
+                    start: vacation.startDate,
+                    end: vacation.endDate,
+                    color: getEmployeeColor(vacation.employeeId),
+                    extendedProps: {
+                        employeeId: vacation.employeeId
+                    }
+                })),
+                eventClick: function(info) {
+                    if (confirm(`Deseja remover as férias de ${info.event.title} neste período?`)) {
+                        // Remove from calendar
+                        info.event.remove();
+                        
+                        // Remove from localStorage
+                        const employeeId = info.event.extendedProps.employeeId;
+                        const startDate = info.event.startStr;
+                        const endDate = info.event.endStr;
+                        
+                        savedVacations = savedVacations.filter(v => 
+                            !(v.employeeId === employeeId && 
+                              v.startDate === startDate && 
+                              v.endDate === endDate)
+                        );
+                        
+                        localStorage.setItem('vacations', JSON.stringify(savedVacations));
+                    }
+                },
+                dateClick: function(info) {
+                    // Optional: Handle date clicks if needed
+                },
+                eventOverlap: false, // Prevent overlapping events
+                selectOverlap: function(event) {
+                    return !event; // Only allow selection on empty slots
+                }
+            });
+            
+            calendar.render();
+            
+            // Save vacation button
+            document.getElementById('save-vacation').addEventListener('click', function() {
+                const employeeSelect = document.getElementById('employee-select');
+                const startDateInput = document.getElementById('vacation-start');
+                const endDateInput = document.getElementById('vacation-end');
+                
+                const employeeId = employeeSelect.value;
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+                
+                if (!employeeId || !startDate || !endDate) {
+                    alert('Por favor, preencha todos os campos.');
+                    return;
+                }
+                
+                if (new Date(startDate) >= new Date(endDate)) {
+                    alert('A data de início deve ser anterior à data de fim.');
+                    return;
+                }
+                
+                // Check for overlapping vacations
+                const isOverlapping = savedVacations.some(v => {
+                    const vStart = new Date(v.startDate);
+                    const vEnd = new Date(v.endDate);
+                    const newStart = new Date(startDate);
+                    const newEnd = new Date(endDate);
+                    
+                    return (newStart >= vStart && newStart <= vEnd) ||
+                           (newEnd >= vStart && newEnd <= vEnd) ||
+                           (newStart <= vStart && newEnd >= vEnd);
+                });
+                
+                if (isOverlapping) {
+                    alert('Já existe um colaborador com férias neste período. Por favor, escolha outra data.');
+                    return;
+                }
+                
+                const employeeName = employeeSelect.options[employeeSelect.selectedIndex].text;
+                
+                // Add to calendar
+                calendar.addEvent({
+                    title: employeeName,
+                    start: startDate,
+                    end: endDate,
+                    color: getEmployeeColor(employeeId),
+                    extendedProps: {
+                        employeeId: employeeId
+                    }
+                });
+                
+                // Save to localStorage
+                savedVacations.push({
+                    employeeId: employeeId,
+                    employeeName: employeeName,
+                    startDate: startDate,
+                    endDate: endDate
+                });
+                
+                localStorage.setItem('vacations', JSON.stringify(savedVacations));
+                
+                // Clear form
+                employeeSelect.value = '';
+                startDateInput.value = '';
+                endDateInput.value = '';
+                
+                alert('Férias salvas com sucesso!');
+            });
+        }
+        
+        // Schedule Calendar
+        function initScheduleCalendar() {
+            const calendarEl = document.getElementById('schedule-calendar');
+            
+            // Load saved schedules from localStorage
+            let savedSchedules = JSON.parse(localStorage.getItem('schedules')) || [];
+            
+            // Update schedules list
+            updateSchedulesList(savedSchedules);
+            
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,dayGridWeek'
+                },
+                events: savedSchedules.map(schedule => ({
+                    title: `${schedule.employeeName} (${schedule.startTime}-${schedule.endTime})`,
+                    start: schedule.periodStart,
+                    end: schedule.periodEnd,
+                    color: getEmployeeColor(schedule.employeeId),
+                    extendedProps: {
+                        scheduleId: schedule.id
+                    }
+                })),
+                eventClick: function(info) {
+                    if (confirm(`Deseja remover esta escala de ${info.event.title}?`)) {
+                        // Remove from calendar
+                        info.event.remove();
+                        
+                        // Remove from localStorage
+                        const scheduleId = info.event.extendedProps.scheduleId;
+                        
+                        savedSchedules = savedSchedules.filter(s => s.id !== scheduleId);
+                        localStorage.setItem('schedules', JSON.stringify(savedSchedules));
+                        
+                        // Update schedules list
+                        updateSchedulesList(savedSchedules);
+                    }
+                }
+            });
+            
+            calendar.render();
+            
+            // Save schedule button
+            document.getElementById('save-schedule').addEventListener('click', function() {
+                const employeeSelect = document.getElementById('schedule-employee');
+                const startTimeInput = document.getElementById('schedule-start');
+                const endTimeInput = document.getElementById('schedule-end');
+                const typeSelect = document.getElementById('schedule-type');
+                const periodStartInput = document.getElementById('schedule-period-start');
+                const periodEndInput = document.getElementById('schedule-period-end');
+                
+                const employeeId = employeeSelect.value;
+                const startTime = startTimeInput.value;
+                const endTime = endTimeInput.value;
+                const type = typeSelect.value;
+                const periodStart = periodStartInput.value;
+                const periodEnd = periodEndInput.value;
+                
+                if (!employeeId || !startTime || !endTime || !periodStart || !periodEnd) {
+                    alert('Por favor, preencha todos os campos.');
+                    return;
+                }
+                
+                if (new Date(periodStart) >= new Date(periodEnd)) {
+                    alert('A data de início deve ser anterior à data de fim.');
+                    return;
+                }
+                
+                const employeeName = employeeSelect.options[employeeSelect.selectedIndex].text;
+                const scheduleId = Date.now().toString(); // Simple unique ID
+                
+                // Add to calendar
+                calendar.addEvent({
+                    title: `${employeeName} (${startTime}-${endTime})`,
+                    start: periodStart,
+                    end: periodEnd,
+                    color: getEmployeeColor(employeeId),
+                    extendedProps: {
+                        scheduleId: scheduleId
+                    }
+                });
+                
+                // Save to localStorage
+                savedSchedules.push({
+                    id: scheduleId,
+                    employeeId: employeeId,
+                    employeeName: employeeName,
+                    startTime: startTime,
+                    endTime: endTime,
+                    type: type,
+                    periodStart: periodStart,
+                    periodEnd: periodEnd
+                });
+                
+                localStorage.setItem('schedules', JSON.stringify(savedSchedules));
+                
+                // Clear form
+                employeeSelect.value = '';
+                startTimeInput.value = '';
+                endTimeInput.value = '';
+                periodStartInput.value = '';
+                periodEndInput.value = '';
+                
+                // Update schedules list
+                updateSchedulesList(savedSchedules);
+                
+                alert('Escala salva com sucesso!');
+            });
+        }
+        
+        function updateSchedulesList(schedules) {
+            const schedulesList = document.getElementById('schedules-list');
+            schedulesList.innerHTML = '';
+            
+            if (schedules.length === 0) {
+                schedulesList.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma escala cadastrada</p>';
+                return;
+            }
+            
+            schedules.forEach(schedule => {
+                const scheduleItem = document.createElement('div');
+                scheduleItem.className = 'bg-white p-3 rounded-lg shadow-sm flex justify-between items-center';
+                
+                const scheduleInfo = document.createElement('div');
+                scheduleInfo.innerHTML = `
+                    <div class="flex items-center mb-1">
+                        <div class="w-3 h-3 rounded-full mr-2 ${getEmployeeColorClass(schedule.employeeId)}"></div>
+                        <strong>${schedule.employeeName}</strong>
+                    </div>
+                    <div class="text-sm">${schedule.startTime} - ${schedule.endTime}</div>
+                    <div class="text-xs text-gray-500">${schedule.type} • ${formatDate(schedule.periodStart)} a ${formatDate(schedule.periodEnd)}</div>
+                `;
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'text-red-500 hover:text-red-700';
+                deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteButton.addEventListener('click', function() {
+                    if (confirm(`Deseja remover a escala de ${schedule.employeeName}?`)) {
+                        // Remove from localStorage
+                        const updatedSchedules = schedules.filter(s => s.id !== schedule.id);
+                        localStorage.setItem('schedules', JSON.stringify(updatedSchedules));
+                        
+                        // Update list and calendar
+                        updateSchedulesList(updatedSchedules);
+                        initScheduleCalendar(); // Refresh calendar
+                    }
+                });
+                
+                scheduleItem.appendChild(scheduleInfo);
+                scheduleItem.appendChild(deleteButton);
+                schedulesList.appendChild(scheduleItem);
+            });
+        }
+        
+        // Materials functionality
+        function loadMaterials() {
+            const materialsContainer = document.querySelector('#materials .grid');
+            const savedMaterials = JSON.parse(localStorage.getItem('materials')) || [];
+            
+            materialsContainer.innerHTML = '';
+            
+            if (savedMaterials.length === 0) {
+                materialsContainer.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-gray-500">
+                        <i class="fas fa-folder-open text-4xl mb-2"></i>
+                        <p>Nenhum material cadastrado</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            savedMaterials.forEach(material => {
+                const materialCard = document.createElement('div');
+                materialCard.className = 'bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200';
+                
+                let icon = '';
+                switch(material.type) {
+                    case 'document':
+                        icon = 'fa-file-alt';
+                        break;
+                    case 'spreadsheet':
+                        icon = 'fa-file-excel';
+                        break;
+                    case 'video':
+                        icon = 'fa-video';
+                        break;
+                    case 'tutorial':
+                        icon = 'fa-graduation-cap';
+                        break;
+                    default:
+                        icon = 'fa-file';
+                }
+                
+                materialCard.innerHTML = `
+                    <a href="${material.url}" target="_blank" class="block">
+                        <div class="p-4 text-center">
+                            <i class="fas ${icon} text-4xl mb-3 ${getMaterialColorClass(material.type)}"></i>
+                            <h5 class="font-medium">${material.title}</h5>
+                        </div>
+                    </a>
+                    <div class="bg-gray-50 px-4 py-2 flex justify-between items-center border-t border-gray-200">
+                        <span class="text-xs text-gray-500">${formatMaterialType(material.type)}</span>
+                        <button class="text-red-500 hover:text-red-700 text-sm delete-material" data-id="${material.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                materialsContainer.appendChild(materialCard);
+            });
+            
+            // Add delete event listeners
+            document.querySelectorAll('.delete-material').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const materialId = this.getAttribute('data-id');
+                    deleteMaterial(materialId);
+                });
+            });
+        }
+        
+        document.getElementById('add-material').addEventListener('click', function() {
+            const titleInput = document.getElementById('material-title');
+            const typeSelect = document.getElementById('material-type');
+            const urlInput = document.getElementById('material-url');
+            
+            const title = titleInput.value.trim();
+            const type = typeSelect.value;
+            const url = urlInput.value.trim();
+            
+            if (!title || !url) {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
+            
+            // Validate URL
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                alert('Por favor, insira uma URL válida (deve começar com http:// ou https://)');
+                return;
+            }
+            
+            const savedMaterials = JSON.parse(localStorage.getItem('materials')) || [];
+            const materialId = Date.now().toString();
+            
+            savedMaterials.push({
+                id: materialId,
+                title: title,
+                type: type,
+                url: url
+            });
+            
+            localStorage.setItem('materials', JSON.stringify(savedMaterials));
+            
+            // Clear form
+            titleInput.value = '';
+            urlInput.value = '';
+            
+            // Reload materials
+            loadMaterials();
+            
+            alert('Material adicionado com sucesso!');
+        });
+        
+        function deleteMaterial(id) {
+            const savedMaterials = JSON.parse(localStorage.getItem('materials')) || [];
+            const updatedMaterials = savedMaterials.filter(m => m.id !== id);
+            
+            localStorage.setItem('materials', JSON.stringify(updatedMaterials));
+            loadMaterials();
+        }
+        
+        // Helper functions
+        function getEmployeeColor(employeeId) {
+            const colors = [
+                '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFBE0B', '#FB5607',
+                '#8338EC', '#3A86FF', '#06D6A0', '#EF476F', '#118AB2'
+            ];
+            return colors[(parseInt(employeeId) - 1) % colors.length];
+        }
+        
+        function getEmployeeColorClass(employeeId) {
+            return `employee-color-${employeeId}`;
+        }
+        
+        function getMaterialColorClass(type) {
+            switch(type) {
+                case 'document': return 'text-blue-500';
+                case 'spreadsheet': return 'text-green-500';
+                case 'video': return 'text-red-500';
+                case 'tutorial': return 'text-purple-500';
+                default: return 'text-gray-500';
+            }
+        }
+        
+        function formatDate(dateString) {
+            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('pt-BR', options);
+        }
+        
+        function formatMaterialType(type) {
+            switch(type) {
+                case 'document': return 'Documento';
+                case 'spreadsheet': return 'Planilha';
+                case 'video': return 'Vídeo';
+                case 'tutorial': return 'Tutorial';
+                default: return type;
+            }
+        }
+    </script>
+</body>
+</html>
