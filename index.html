@@ -50,8 +50,8 @@
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <header class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-blue-800">Setor de Faturamento</h1>
-            <h2 class="text-xl text-gray-600">Prefeitura Municipal de Nova Veneza</h2>
+            <h1 class="text-3xl font-bold text-blue-800">FATURAMENTO</h1>
+            <h2 class="text-xl text-gray-600">Nova Veneza</h2>
         </header>
         
         <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
@@ -63,7 +63,7 @@
                     <i class="fas fa-calendar-alt mr-2"></i> Escala de Trabalho
                 </button>
                 <button class="tab-button px-6 py-3 font-medium text-gray-600 hover:text-blue-800" data-tab="materials">
-                    <i class="fas fa-folder-open mr-2"></i> Materiais
+                    <i class="fas fa-folder-open mr-2"></i> Upload de Arquivos
                 </button>
             </div>
             
@@ -235,40 +235,28 @@
             
             <!-- Materials Tab -->
             <div id="materials" class="tab-content p-6">
-                <h3 class="text-xl font-semibold mb-4 text-blue-800">Materiais do Setor</h3>
+                <h3 class="text-xl font-semibold mb-4 text-blue-800">Upload de Arquivos</h3>
                 
-                <div class="mb-6">
+                <div class="mb-8">
                     <div class="bg-blue-50 p-4 rounded-lg">
-                        <h4 class="font-medium mb-2 text-blue-800">Adicionar Novo Material</h4>
+                        <h4 class="font-medium mb-4 text-blue-800">Arraste e solte seus arquivos aqui</h4>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-sm text-gray-600">Título</label>
-                                <input type="text" id="material-title" class="w-full p-2 border border-gray-300 rounded" placeholder="Título do material">
-                            </div>
-                            <div>
-                                <label class="block text-sm text-gray-600">Tipo</label>
-                                <select id="material-type" class="w-full p-2 border border-gray-300 rounded">
-                                    <option value="document">Documento</option>
-                                    <option value="spreadsheet">Planilha</option>
-                                    <option value="video">Vídeo</option>
-                                    <option value="tutorial">Tutorial</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm text-gray-600">URL</label>
-                                <input type="text" id="material-url" class="w-full p-2 border border-gray-300 rounded" placeholder="Link do material">
+                        <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors">
+                            <div class="space-y-4">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
+                                <p class="text-gray-600">Arraste e solte seus arquivos aqui</p>
+                                <p class="text-sm text-gray-500">ou</p>
+                                <label class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer">
+                                    <input type="file" id="file-upload" class="hidden" multiple>
+                                    <span>Selecione arquivos</span>
+                                </label>
                             </div>
                         </div>
-                        
-                        <button id="add-material" class="mt-4 bg-blue-800 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-                            <i class="fas fa-plus mr-2"></i> Adicionar Material
-                        </button>
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <!-- Materials will be displayed here -->
+                    <!-- Uploaded files will be displayed here -->
                 </div>
             </div>
         </div>
@@ -312,7 +300,7 @@
             document.querySelector('.tab-button[data-tab="vacation"]').click();
             
             // Load materials
-            loadMaterials();
+            loadFiles();
         });
         
         // Vacation Calendar
@@ -595,120 +583,133 @@
         }
         
         // Materials functionality
-        function loadMaterials() {
-            const materialsContainer = document.querySelector('#materials .grid');
-            const savedMaterials = JSON.parse(localStorage.getItem('materials')) || [];
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropZone = document.getElementById('drop-zone');
+            const fileUpload = document.getElementById('file-upload');
             
-            materialsContainer.innerHTML = '';
+            // Drag and drop handlers
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-blue-500');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('border-blue-500');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-blue-500');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFiles(files);
+                }
+            });
+
+            // File input handler
+            fileUpload.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    handleFiles(files);
+                }
+            });
+
+            // Load existing files
+            loadFiles();
+        });
+
+        function handleFiles(files) {
+            const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
             
-            if (savedMaterials.length === 0) {
-                materialsContainer.innerHTML = `
+            Array.from(files).forEach(file => {
+                const newFile = {
+                    id: Date.now().toString(),
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    uploadDate: new Date().toISOString()
+                };
+
+                savedFiles.push(newFile);
+                localStorage.setItem('uploadedFiles', JSON.stringify(savedFiles));
+            });
+
+            loadFiles();
+            alert('Arquivos enviados com sucesso!');
+        }
+
+        function loadFiles() {
+            const filesContainer = document.querySelector('#materials .grid');
+            const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
+            
+            filesContainer.innerHTML = '';
+            
+            if (savedFiles.length === 0) {
+                filesContainer.innerHTML = `
                     <div class="col-span-full text-center py-8 text-gray-500">
                         <i class="fas fa-folder-open text-4xl mb-2"></i>
-                        <p>Nenhum material cadastrado</p>
+                        <p>Nenhum arquivo enviado</p>
                     </div>
                 `;
                 return;
             }
-            
-            savedMaterials.forEach(material => {
-                const materialCard = document.createElement('div');
-                materialCard.className = 'bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200';
+
+            savedFiles.forEach(file => {
+                const fileCard = document.createElement('div');
+                fileCard.className = 'bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow';
                 
-                let icon = '';
-                switch(material.type) {
-                    case 'document':
-                        icon = 'fa-file-alt';
-                        break;
-                    case 'spreadsheet':
-                        icon = 'fa-file-excel';
-                        break;
-                    case 'video':
-                        icon = 'fa-video';
-                        break;
-                    case 'tutorial':
-                        icon = 'fa-graduation-cap';
-                        break;
-                    default:
-                        icon = 'fa-file';
-                }
-                
-                materialCard.innerHTML = `
-                    <a href="${material.url}" target="_blank" class="block">
-                        <div class="p-4 text-center">
-                            <i class="fas ${icon} text-4xl mb-3 ${getMaterialColorClass(material.type)}"></i>
-                            <h5 class="font-medium">${material.title}</h5>
+                fileCard.innerHTML = `
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-medium text-blue-800">${file.name}</h4>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="downloadFile('${file.id}')" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button onclick="deleteFile('${file.id}')" class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
-                    </a>
-                    <div class="bg-gray-50 px-4 py-2 flex justify-between items-center border-t border-gray-200">
-                        <span class="text-xs text-gray-500">${formatMaterialType(material.type)}</span>
-                        <button class="text-red-500 hover:text-red-700 text-sm delete-material" data-id="${material.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
                     </div>
+                    <p class="text-sm text-gray-600">${formatFileSize(file.size)}</p>
+                    <p class="text-xs text-gray-400">${new Date(file.uploadDate).toLocaleDateString()} - ${new Date(file.uploadDate).toLocaleTimeString()}</p>
                 `;
-                
-                materialsContainer.appendChild(materialCard);
-            });
-            
-            // Add delete event listeners
-            document.querySelectorAll('.delete-material').forEach(button => {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const materialId = this.getAttribute('data-id');
-                    deleteMaterial(materialId);
-                });
+
+                filesContainer.appendChild(fileCard);
             });
         }
-        
-        document.getElementById('add-material').addEventListener('click', function() {
-            const titleInput = document.getElementById('material-title');
-            const typeSelect = document.getElementById('material-type');
-            const urlInput = document.getElementById('material-url');
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function downloadFile(id) {
+            const files = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
+            const file = files.find(f => f.id === id);
             
-            const title = titleInput.value.trim();
-            const type = typeSelect.value;
-            const url = urlInput.value.trim();
-            
-            if (!title || !url) {
-                alert('Por favor, preencha todos os campos.');
-                return;
+            if (file) {
+                // Create a temporary link to download the file
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(new Blob([file]));
+                link.download = file.name;
+                link.click();
             }
-            
-            // Validate URL
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                alert('Por favor, insira uma URL válida (deve começar com http:// ou https://)');
-                return;
+        }
+
+        function deleteFile(id) {
+            if (confirm('Tem certeza que deseja excluir este arquivo?')) {
+                const files = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
+                const updatedFiles = files.filter(f => f.id !== id);
+                
+                localStorage.setItem('uploadedFiles', JSON.stringify(updatedFiles));
+                loadFiles();
+                
+                alert('Arquivo removido com sucesso!');
             }
-            
-            const savedMaterials = JSON.parse(localStorage.getItem('materials')) || [];
-            const materialId = Date.now().toString();
-            
-            savedMaterials.push({
-                id: materialId,
-                title: title,
-                type: type,
-                url: url
-            });
-            
-            localStorage.setItem('materials', JSON.stringify(savedMaterials));
-            
-            // Clear form
-            titleInput.value = '';
-            urlInput.value = '';
-            
-            // Reload materials
-            loadMaterials();
-            
-            alert('Material adicionado com sucesso!');
-        });
-        
-        function deleteMaterial(id) {
-            const savedMaterials = JSON.parse(localStorage.getItem('materials')) || [];
-            const updatedMaterials = savedMaterials.filter(m => m.id !== id);
-            
-            localStorage.setItem('materials', JSON.stringify(updatedMaterials));
-            loadMaterials();
         }
         
         // Helper functions
@@ -724,29 +725,9 @@
             return `employee-color-${employeeId}`;
         }
         
-        function getMaterialColorClass(type) {
-            switch(type) {
-                case 'document': return 'text-blue-500';
-                case 'spreadsheet': return 'text-green-500';
-                case 'video': return 'text-red-500';
-                case 'tutorial': return 'text-purple-500';
-                default: return 'text-gray-500';
-            }
-        }
-        
         function formatDate(dateString) {
             const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
             return new Date(dateString).toLocaleDateString('pt-BR', options);
-        }
-        
-        function formatMaterialType(type) {
-            switch(type) {
-                case 'document': return 'Documento';
-                case 'spreadsheet': return 'Planilha';
-                case 'video': return 'Vídeo';
-                case 'tutorial': return 'Tutorial';
-                default: return type;
-            }
         }
     </script>
 </body>
